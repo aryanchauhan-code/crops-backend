@@ -13,7 +13,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origin_list,
+    allow_origins=[
+        "https://crops-frontend-1oewzq85v-aryans-projects-0f6436b8.vercel.app",
+        "http://localhost:5173",  # for local dev with Vite
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
