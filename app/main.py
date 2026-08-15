@@ -13,10 +13,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://crops-frontend-1oewzq85v-aryans-projects-0f6436b8.vercel.app",
-        "http://localhost:5173",  # for local dev with Vite
-    ],
+    allow_origins=settings.cors_origin_list,
+    # Every Vercel deploy of this project gets a new random-hash preview URL
+    # (crops-frontend-<hash>-aryans-projects-0f6436b8.vercel.app) -- an exact
+    # allow_origins entry goes stale on the next deploy, so match the whole
+    # project instead of one deployment's URL.
+    allow_origin_regex=r"https://crops-frontend-.*-aryans-projects-0f6436b8\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
