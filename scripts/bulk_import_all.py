@@ -38,23 +38,36 @@ def clean_value(v):
 
 
 def load_data_file(file_path: Path) -> list[dict]:
-    """Reads a .csv, .xlsx, or .xls file into a list of dicts. Excel files with
-    multiple sheets: only the first sheet is read (pass sheet_name explicitly
-    below if your files have data on a different/named sheet)."""
+    """Reads a .csv, .xlsx, or .xls file into a list of dicts. Excel files are
+    read sheet by sheet and concatenated -- several of our source files bundle
+    multiple states as separate sheets in one workbook, and reading only
+    sheet_name=0 silently dropped every sheet after the first. Each row is
+    tagged with 'filename::sheetname' so rows stay traceable back to their
+    original sheet, not just the workbook."""
     suffix = file_path.suffix.lower()
     if suffix == ".csv":
         df = pd.read_csv(file_path, dtype=str)
-    elif suffix in (".xlsx", ".xls"):
-        df = pd.read_excel(file_path, dtype=str, sheet_name=0, engine="openpyxl" if suffix == ".xlsx" else None)
-    else:
-        raise ValueError(f"Unsupported file type: {file_path.name}")
+        df = df.where(pd.notnull(df), None)
+        records = df.to_dict(orient="records")
+        records = [{k: clean_value(v) for k, v in rec.items()} for rec in records]
+        for rec in records:
+            rec["_source_file"] = file_path.name
+        return records
 
-    df = df.where(pd.notnull(df), None)
-    records = df.to_dict(orient="records")
-    records = [{k: clean_value(v) for k, v in rec.items()} for rec in records]
-    for rec in records:
-        rec["_source_file"] = file_path.name
-    return records
+    if suffix in (".xlsx", ".xls"):
+        engine = "openpyxl" if suffix == ".xlsx" else None
+        sheets = pd.read_excel(file_path, dtype=str, sheet_name=None, engine=engine)
+        records = []
+        for sheet_name, df in sheets.items():
+            df = df.where(pd.notnull(df), None)
+            sheet_records = df.to_dict(orient="records")
+            sheet_records = [{k: clean_value(v) for k, v in rec.items()} for rec in sheet_records]
+            for rec in sheet_records:
+                rec["_source_file"] = f"{file_path.name}::{sheet_name}"
+            records.extend(sheet_records)
+        return records
+
+    raise ValueError(f"Unsupported file type: {file_path.name}")
 
 
 def main():

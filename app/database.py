@@ -29,12 +29,11 @@ async def close_client():
 # it just helps the frontend show nice labels and pick a sensible "title field".
 DATASET_REGISTRY: dict[str, dict] = {
     "fermented_beverages": {
-        "label": "Traditional Fermented Beverages",
+        "label": "Traditional Fermented Beverages (India)",
         "title_field": "Beverage Name",
     },
-    # "crops_by_state": {
-    #     "label": "Crops by State",
-    #     "title_field": "Crop Name",
-    # },
-    # ... add one entry per additional file as you import it
+    "world_fermented_beverages": {
+        "label": "World Fermented Beverages",
+        "title_field": "Beverage Name",
+    },
 }
